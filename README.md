@@ -1,3 +1,5 @@
+[原仓库 XSana/TakoTech](https://github.com/XSana/TakoTech)
+
 <div align="center">
   <img alt="logo" src="docs/image/logo.png">
   <h1 align="center" style="margin-top: 0">TakoTech</h1>
