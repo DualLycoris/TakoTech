@@ -1468,8 +1468,8 @@ public class SectorVertexUtils {
         for (int i = 0; i < n; i++) {
             List<float[][]> segments = new ArrayList<>();
             // 计算扇区起始结束角度
-            float sectorStart = (((i - 0.5F) / i) + 0.25F) * 360F;
-            float sectorEnd = (((i + 0.5F) / i) + 0.25F) * 360F;
+            float sectorStart = (((i - 0.5F) / n) + 0.25F) * 360F;
+            float sectorEnd = (((i + 0.5F) / n) + 0.25F) * 360F;
             float angleRange = sectorEnd - sectorStart;
 
             // 计算分割段数

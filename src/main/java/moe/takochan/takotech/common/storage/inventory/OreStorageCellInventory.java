@@ -1,6 +1,7 @@
 package moe.takochan.takotech.common.storage.inventory;
 
 import static appeng.me.storage.CellInventory.getCell;
+import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
 
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
@@ -8,18 +9,18 @@ import net.minecraft.nbt.NBTTagCompound;
 
 import org.jetbrains.annotations.NotNull;
 
-import appeng.api.AEApi;
 import appeng.api.config.Actionable;
 import appeng.api.config.FuzzyMode;
 import appeng.api.exceptions.AppEngException;
 import appeng.api.implementations.items.IStorageCell;
 import appeng.api.networking.security.BaseActionSource;
-import appeng.api.storage.IMEInventory;
+import appeng.api.storage.IMEInventoryHandler;
 import appeng.api.storage.ISaveProvider;
-import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IItemList;
-import appeng.util.IterationCounter;
+import appeng.me.storage.CellInventoryHandler;
+import appeng.tile.inventory.IAEStackInventory;
 import moe.takochan.takotech.common.data.CellItemStorageData;
 import moe.takochan.takotech.common.item.ae.ItemOreStorageCell;
 import moe.takochan.takotech.common.storage.CellItemSavedData;
@@ -82,29 +83,6 @@ public class OreStorageCellInventory implements ITakoCellInventory {
     }
 
     /**
-     * 判断物品是否为有效的元件。
-     *
-     * @param itemStack 要检查的物品堆栈
-     * @return 如果物品堆栈是有效的元件，返回 true；否则返回 false
-     */
-    private static boolean isStorageCell(final IAEItemStack itemStack) {
-        if (itemStack == null) {
-            return false;
-        }
-
-        try {
-            // 检查物品是否为 IStorageCell 类型，并且是否可以存储其他物品
-            if (itemStack.getItem() instanceof IStorageCell type) {
-                return !type.storableInStorageCell();
-            }
-        } catch (final Throwable err) {
-            return true;
-        }
-
-        return false;
-    }
-
-    /**
      * 获取当前元件的物品堆栈。
      *
      * @return 返回当前元件的物品堆栈。
@@ -140,8 +118,8 @@ public class OreStorageCellInventory implements ITakoCellInventory {
      * @return 返回配置列表。
      */
     @Override
-    public IInventory getConfigInventory() {
-        return this.cellType.getConfigInventory(this.cellItem);
+    public IAEStackInventory getConfigAEInventory() {
+        return this.cellType.getConfigAEInventory(this.cellItem);
     }
 
     /**
@@ -319,12 +297,10 @@ public class OreStorageCellInventory implements ITakoCellInventory {
             return input;
         }
 
-        // 检查输入物品是否为元件
-        if (isStorageCell(input)) {
-            final IMEInventory<IAEItemStack> meInventory = getCell(input.getItemStack(), null);
-
-            // 如果物品堆栈是有效的元件且非空，则直接返回输入物品堆栈
-            if (meInventory != null && !this.isEmpty(meInventory)) {
+        // 检查元件自身栈类型的库存，避免存入非空元件。
+        if (input.getItem() instanceof IStorageCell cell && !cell.storableInStorageCell()) {
+            final IMEInventoryHandler<?> nestedInventory = getCell(input.getItemStack(), null, cell.getStackType());
+            if (nestedInventory instanceof CellInventoryHandler<?>handler && handler.getUsedBytes() > 0) {
                 return input;
             }
         }
@@ -405,13 +381,13 @@ public class OreStorageCellInventory implements ITakoCellInventory {
     }
 
     /**
-     * 获取该元件的存储通道。
+     * 获取该元件存储的栈类型。
      *
-     * @return 返回该元件所属的存储通道。
+     * @return 物品栈类型。
      */
     @Override
-    public StorageChannel getChannel() {
-        return StorageChannel.ITEMS;
+    public IAEStackType<IAEItemStack> getStackType() {
+        return ITEM_STACK_TYPE;
     }
 
     /**
@@ -474,25 +450,6 @@ public class OreStorageCellInventory implements ITakoCellInventory {
         }
 
         return this.cellItems;
-    }
-
-    /**
-     * 检查给定的物品元件是否为空。
-     *
-     * @param meInventory 物品元件的库存实例
-     * @return 如果物品元件为空，返回 true；否则返回 false
-     */
-    private boolean isEmpty(final IMEInventory<IAEItemStack> meInventory) {
-        boolean isEmpty = meInventory.getAvailableItems(
-            AEApi.instance()
-                .storage()
-                .createItemList(),
-            IterationCounter.incrementGlobalDepth())
-            .isEmpty();
-
-        IterationCounter.decrementGlobalDepth();
-
-        return isEmpty;
     }
 
     /**

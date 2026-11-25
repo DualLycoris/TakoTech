@@ -9,7 +9,7 @@ import appeng.api.AEApi;
 import appeng.core.ApiDefinitions;
 import appeng.core.api.definitions.ApiMaterials;
 import cpw.mods.fml.common.registry.GameRegistry;
-import ic2.core.Ic2Items;
+import gregtech.api.enums.ItemList;
 import moe.takochan.takotech.common.item.ae.OreStorageType;
 import moe.takochan.takotech.common.recipe.OreStorageCellRecipe;
 import moe.takochan.takotech.common.recipe.ToolboxPlusRecipe;
@@ -25,8 +25,6 @@ public class RecipeLoader implements Runnable {
 
     private static ItemStack ITEM_AE2_CELL_64_PART;
 
-    private static ItemStack ITEM_IC2_TOOLBOX;
-
     public RecipeLoader() {
         ApiDefinitions aeDef = (ApiDefinitions) AEApi.instance()
             .definitions();
@@ -41,8 +39,6 @@ public class RecipeLoader implements Runnable {
         ITEM_AE2_CELL_64_PART = aeMaterials.cell64kPart()
             .maybeStack(1)
             .orNull();
-
-        ITEM_IC2_TOOLBOX = Ic2Items.toolbox;
     }
 
     @Override
@@ -88,7 +84,8 @@ public class RecipeLoader implements Runnable {
                     oreStorageCell).setMirrored(false));
         }
 
-        GameRegistry.addRecipe(new ToolboxPlusRecipe(new ItemStack(ItemLoader.ITEM_TOOLBOX_PLUS, 1), ITEM_IC2_TOOLBOX));
+        GameRegistry
+            .addRecipe(new ToolboxPlusRecipe(new ItemStack(ItemLoader.ITEM_TOOLBOX_PLUS, 1), ItemList.ToolBox.get(1)));
     }
 
 }

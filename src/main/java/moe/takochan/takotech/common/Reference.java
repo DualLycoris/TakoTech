@@ -37,10 +37,19 @@ public class Reference {
      */
     public static final String RESOURCE_ROOT_ID = MODID.toLowerCase();
 
+    public static final String NEI_MOD_ID = "NotEnoughItems";
+
     /**
-     * 模组的依赖关系列表。
+     * GTNH 2.9.0 的 Forge 依赖和加载顺序。IC2 下限采用其 {@code @Mod} 报告的版本。
+     * gregtech_nh 标识 GTNH 分支，gregtech 声明主 Mod 的加载顺序。
      */
-    public static final String DEPENDENCIES = "required-after:gtnhlib@[0.2.11,);"
-        + " required-after:appliedenergistics2;"
-        + " after:NotEnoughItems";
+    public static final String DEPENDENCIES = "required-after:gtnhlib@[0.11.54,);"
+        + "required-after:unimixins@[0.3.1,);"
+        + "required-after:appliedenergistics2@[rv3-beta-1095-GTNH,);"
+        + "required-after:IC2@[2.2.827-experimental,);"
+        + "required-after:gregtech@[5.09.54.265,);"
+        + "required-after:gregtech_nh;"
+        + "after:Waila;"
+        + "after:"
+        + NEI_MOD_ID;
 }

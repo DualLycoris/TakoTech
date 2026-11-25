@@ -49,12 +49,12 @@ public enum OreStorageType {
     /**
      * 宝石类型，仅包含 "gem" 前缀。
      */
-    GEM(7, "gem", "", false),
+    GEM(7, "gem", "", true),
 
     /**
      * 粉类型，仅包含 "dust" 前缀，排除脏粉净粉。
      */
-    DUST(8, "dust", "dustImpure|dustPure", false);
+    DUST(8, "dust", "dustImpure|dustPure", true);
 
     /**
      * 与物品 metadata 对应的编号。

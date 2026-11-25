@@ -36,6 +36,9 @@ public class LateMixinLoader implements ILateMixinLoader {
                 mixins.add("gt.MetaGeneratedToolRendererMixin");
             }
             mixins.add("gt.MetaGeneratedToolMixin");
+            mixins.add("gt.GTGenericItemMixin");
+            mixins.add("gt.ItemGTToolboxMixin");
+            mixins.add("gt.ToolboxSlotMixin");
         }
 
         // IC2

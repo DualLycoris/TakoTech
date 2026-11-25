@@ -1,5 +1,6 @@
 package moe.takochan.takotech.client.gui;
 
+import static moe.takochan.takotech.common.Reference.NEI_MOD_ID;
 import static moe.takochan.takotech.utils.SectorVertexUtils.DEFAULT_SECTOR_VERTEX_DATA;
 import static moe.takochan.takotech.utils.SectorVertexUtils.RADIUS_IN;
 import static moe.takochan.takotech.utils.SectorVertexUtils.RADIUS_OUT;
@@ -21,18 +22,21 @@ import org.lwjgl.opengl.GL11;
 import codechicken.nei.VisiblityData;
 import codechicken.nei.api.INEIGuiHandler;
 import codechicken.nei.api.TaggedInventoryArea;
+import cpw.mods.fml.common.Optional;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import moe.takochan.takotech.client.gui.container.ContainerToolboxPlusSelect;
 import moe.takochan.takotech.client.settings.GameSettings;
 import moe.takochan.takotech.common.data.ToolData;
-import moe.takochan.takotech.common.item.ic2.ItemToolboxPlus;
 import moe.takochan.takotech.common.loader.ItemLoader;
 import moe.takochan.takotech.config.ToolboxConfig;
 import moe.takochan.takotech.network.NetworkHandler;
 import moe.takochan.takotech.network.PacketToolboxSelected;
+import moe.takochan.takotech.utils.SectorVertexUtils;
+import moe.takochan.takotech.utils.ToolboxHelper;
 
 @SideOnly(Side.CLIENT)
+@Optional.Interface(modid = NEI_MOD_ID, iface = "codechicken.nei.api.INEIGuiHandler")
 public class GuiToolboxPlusSelect extends GuiContainer implements INEIGuiHandler {
 
     // 物品显示位置半径
@@ -116,31 +120,26 @@ public class GuiToolboxPlusSelect extends GuiContainer implements INEIGuiHandler
         Tessellator tess = Tessellator.instance;
         tess.startDrawingQuads();
 
-        // 使用预计算数据绘制扇区
-        if (n <= 9) {
-            List<List<float[][]>> sectors = DEFAULT_SECTOR_VERTEX_DATA.get(n);
-            if (sectors != null) {
-                for (int i = 0; i < n; i++) {
-                    int color = (i == selectIndex) ? 0xFFFFDD60 : 0x33333380;
-                    int r = (color >> 24) & 0xFF;
-                    int g = (color >> 16) & 0xFF;
-                    int b = (color >> 8) & 0xFF;
-                    int a = color & 0xFF;
-                    tess.setColorRGBA_F(r / 255F, g / 255F, b / 255F, a / 255F);
+        List<List<float[][]>> sectors = DEFAULT_SECTOR_VERTEX_DATA
+            .computeIfAbsent(n, SectorVertexUtils::generateSectorVertex);
+        for (int i = 0; i < n; i++) {
+            int color = (i == selectIndex) ? 0xFFFFDD60 : 0x33333380;
+            int r = (color >> 24) & 0xFF;
+            int g = (color >> 16) & 0xFF;
+            int b = (color >> 8) & 0xFF;
+            int a = color & 0xFF;
+            tess.setColorRGBA_F(r / 255F, g / 255F, b / 255F, a / 255F);
 
-                    List<float[][]> segments = sectors.get(i);
-                    for (float[][] segment : segments) {
-                        float[] pos1Out = segment[0];
-                        float[] pos1In = segment[1];
-                        float[] pos2In = segment[2];
-                        float[] pos2Out = segment[3];
+            for (float[][] segment : sectors.get(i)) {
+                float[] pos1Out = segment[0];
+                float[] pos1In = segment[1];
+                float[] pos2In = segment[2];
+                float[] pos2Out = segment[3];
 
-                        tess.addVertex(xCenter + pos1Out[0], yCenter + pos1Out[1], zLevel);
-                        tess.addVertex(xCenter + pos1In[0], yCenter + pos1In[1], zLevel);
-                        tess.addVertex(xCenter + pos2In[0], yCenter + pos2In[1], zLevel);
-                        tess.addVertex(xCenter + pos2Out[0], yCenter + pos2Out[1], zLevel);
-                    }
-                }
+                tess.addVertex(xCenter + pos1Out[0], yCenter + pos1Out[1], zLevel);
+                tess.addVertex(xCenter + pos1In[0], yCenter + pos1In[1], zLevel);
+                tess.addVertex(xCenter + pos2In[0], yCenter + pos2In[1], zLevel);
+                tess.addVertex(xCenter + pos2Out[0], yCenter + pos2Out[1], zLevel);
             }
         }
 
@@ -234,6 +233,7 @@ public class GuiToolboxPlusSelect extends GuiContainer implements INEIGuiHandler
 
     // region NEI
     @Override
+    @Optional.Method(modid = NEI_MOD_ID)
     public VisiblityData modifyVisiblity(GuiContainer gui, VisiblityData currentVisibility) {
         // 隐藏NEI界面
         currentVisibility.showNEI = false;
@@ -241,21 +241,25 @@ public class GuiToolboxPlusSelect extends GuiContainer implements INEIGuiHandler
     }
 
     @Override
+    @Optional.Method(modid = NEI_MOD_ID)
     public Iterable<Integer> getItemSpawnSlots(GuiContainer gui, ItemStack item) {
         return null;
     }
 
     @Override
+    @Optional.Method(modid = NEI_MOD_ID)
     public List<TaggedInventoryArea> getInventoryAreas(GuiContainer gui) {
         return null;
     }
 
     @Override
+    @Optional.Method(modid = NEI_MOD_ID)
     public boolean handleDragNDrop(GuiContainer gui, int mousex, int mousey, ItemStack draggedStack, int button) {
         return true;
     }
 
     @Override
+    @Optional.Method(modid = NEI_MOD_ID)
     public boolean hideItemPanelSlot(GuiContainer gui, int x, int y, int w, int h) {
         return true;
     }
@@ -268,7 +272,7 @@ public class GuiToolboxPlusSelect extends GuiContainer implements INEIGuiHandler
      */
     private void loadItems(ItemStack stack) {
         items.clear();
-        if (ItemToolboxPlus.isMetaGeneratedTool(stack)) {
+        if (ToolboxHelper.hasDetachedToolbox(stack)) {
             this.items.add(new ToolData(-1, DEFAULT_ITEM));
         }
         final List<ToolData> list = getGTTools(stack);
@@ -283,13 +287,8 @@ public class GuiToolboxPlusSelect extends GuiContainer implements INEIGuiHandler
      * @return 工具列表，如果不存在则返回 null
      */
     public List<ToolData> getGTTools(ItemStack stack) {
-        return ItemToolboxPlus.getToolbox(stack)
-            .map(toolbox -> {
-                if (toolbox.getItem() instanceof ItemToolboxPlus) {
-                    return ItemToolboxPlus.getToolItems(toolbox);
-                }
-                return null;
-            })
+        return ToolboxHelper.getToolbox(stack)
+            .map(ToolboxHelper::getToolItems)
             .orElse(null);
     }
 }

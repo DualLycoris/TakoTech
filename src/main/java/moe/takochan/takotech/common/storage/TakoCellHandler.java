@@ -1,5 +1,7 @@
 package moe.takochan.takotech.common.storage;
 
+import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
+
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
@@ -11,6 +13,8 @@ import appeng.api.storage.IMEInventory;
 import appeng.api.storage.IMEInventoryHandler;
 import appeng.api.storage.ISaveProvider;
 import appeng.api.storage.StorageChannel;
+import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStackType;
 import appeng.client.texture.ExtraBlockTextures;
 import appeng.core.sync.GuiBridge;
 import appeng.util.Platform;
@@ -34,14 +38,14 @@ public class TakoCellHandler implements ICellHandler {
     /**
      * 获取存储元件库存处理器
      *
-     * @param is      存储元件物品
-     * @param host    每当存储元件的内容发生变化时，应该使用此方法请求保存。请注意，该值可能为null。
-     * @param channel 请求的存储通道
+     * @param is   存储元件物品
+     * @param host 每当存储元件的内容发生变化时，应该使用此方法请求保存。请注意，该值可能为null。
+     * @param type 请求的栈类型
      * @return 如果无法处理提供的物品，返回null，否则返回一个库存处理器
      */
     @Override
-    public IMEInventoryHandler<?> getCellInventory(ItemStack is, ISaveProvider host, StorageChannel channel) {
-        if (isCell(is) && is.getItem() instanceof IBaseAECellItem aci && channel == StorageChannel.ITEMS) {
+    public IMEInventoryHandler<IAEItemStack> getCellInventory(ItemStack is, ISaveProvider host, IAEStackType<?> type) {
+        if (type == ITEM_STACK_TYPE && isCell(is) && is.getItem() instanceof IBaseAECellItem aci) {
             try {
                 return new TakoCellInventoryHandler(aci.getCellInv(is, host));
             } catch (Exception e) {

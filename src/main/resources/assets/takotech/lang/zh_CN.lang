@@ -9,7 +9,7 @@ item.takotech.ore_storage_cell.5.name=ME矿物存储元件 - 含杂粉
 item.takotech.ore_storage_cell.6.name=ME矿物存储元件 - 洁净粉
 item.takotech.ore_storage_cell.7.name=ME矿物存储元件 - 宝石
 item.takotech.ore_storage_cell.8.name=ME矿物存储元件 - 粉
-item.takotech.toolbox_plus.name=高级工具箱
+gt.takotech.toolbox_plus.name=高级工具箱
 
 tile.takotech.web_controller.name=Web控制器
 

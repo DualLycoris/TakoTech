@@ -8,12 +8,9 @@ import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.InputEvent;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
-import gregtech.api.items.MetaGeneratedTool;
-import moe.takochan.takotech.common.item.ic2.ItemToolboxPlus;
-import moe.takochan.takotech.constants.NBTConstants;
 import moe.takochan.takotech.network.NetworkHandler;
 import moe.takochan.takotech.network.PacketToolboxOpenSelectGUI;
-import moe.takochan.takotech.utils.CommonUtils;
+import moe.takochan.takotech.utils.ToolboxHelper;
 
 /**
  * 按键处理器类
@@ -41,6 +38,7 @@ public class KeyHandler {
         // 如果按键被按下，执行逻辑
         if (GameSettings.selectTool.isPressed()) {
             EntityPlayer player = Minecraft.getMinecraft().thePlayer;
+            if (player == null) return;
             ItemStack heldItem = player.inventory.getCurrentItem();
             if (isValidToolbox(heldItem)) {
                 NetworkHandler.NETWORK.sendToServer(new PacketToolboxOpenSelectGUI());
@@ -57,15 +55,7 @@ public class KeyHandler {
      * @return 如果物品是有效的工具箱，返回true；否则返回false
      */
     private boolean isValidToolbox(ItemStack stack) {
-        if (stack == null) return false;
-
-        if (stack.getItem() instanceof ItemToolboxPlus) {
-            return !ItemToolboxPlus.getToolItems(stack)
-                .isEmpty();
-        } else if (stack.getItem() instanceof MetaGeneratedTool) {
-            return CommonUtils.openNbtData(stack)
-                .hasKey(NBTConstants.TOOLBOX_DATA);
-        }
-        return false;
+        return ToolboxHelper.hasDetachedToolbox(stack) || !ToolboxHelper.getToolItems(stack)
+            .isEmpty();
     }
 }

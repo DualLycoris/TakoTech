@@ -1,24 +1,22 @@
 package moe.takochan.takotech.common.storage;
 
+import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
+
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 
-import com.glodblock.github.util.Ae2Reflect;
-
-import appeng.api.AEApi;
-import appeng.api.config.FuzzyMode;
 import appeng.api.config.IncludeExclude;
 import appeng.api.config.Upgrades;
 import appeng.api.implementations.items.IUpgradeModule;
 import appeng.api.storage.ICellCacheRegistry;
 import appeng.api.storage.IMEInventory;
-import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IItemList;
 import appeng.me.storage.MEInventoryHandler;
 import appeng.me.storage.MEPassThrough;
-import appeng.util.item.AEItemStack;
+import appeng.tile.inventory.IAEStackInventory;
 import appeng.util.prioitylist.FuzzyPriorityList;
+import appeng.util.prioitylist.IPartitionList;
 import appeng.util.prioitylist.OreFilteredList;
 import appeng.util.prioitylist.PrecisePriorityList;
 import moe.takochan.takotech.utils.OreCellFuzzyPartitionList;
@@ -27,14 +25,12 @@ public class TakoCellInventoryHandler extends MEInventoryHandler<IAEItemStack>
     implements ITakoCellInventoryHandler, ICellCacheRegistry {
 
     public TakoCellInventoryHandler(IMEInventory<IAEItemStack> meInventory) {
-        super(meInventory, StorageChannel.ITEMS);
+        super(meInventory, ITEM_STACK_TYPE);
         final ITakoCellInventory ci = this.getCellInv();
 
         // init
         if (ci != null) {
             final IInventory upgrades = ci.getUpgradesInventory();
-            final IInventory config = ci.getConfigInventory();
-            final FuzzyMode fzMode = ci.getFuzzyMode();
             final String filter = ci.getOreFilter();
 
             boolean hasInverter = false;
@@ -66,13 +62,11 @@ public class TakoCellInventoryHandler extends MEInventoryHandler<IAEItemStack>
             if (hasOreFilter && !filter.isEmpty()) {
                 this.setPartitionList(new OreFilteredList(filter));
             } else {
-                final IItemList<IAEItemStack> priorityList = AEApi.instance()
-                    .storage()
-                    .createItemList();
+                final IAEStackInventory config = ci.getConfigAEInventory();
+                final IItemList<IAEItemStack> priorityList = ITEM_STACK_TYPE.createList();
                 for (int i = 0; i < config.getSizeInventory(); i++) {
-                    final ItemStack is = config.getStackInSlot(i);
-                    if (is != null) {
-                        priorityList.add(AEItemStack.create(is));
+                    if (config.getAEStackInSlot(i) instanceof IAEItemStack stack) {
+                        priorityList.add(stack);
                     }
                 }
                 if (!priorityList.isEmpty()) {
@@ -88,22 +82,17 @@ public class TakoCellInventoryHandler extends MEInventoryHandler<IAEItemStack>
 
     @Override
     public ITakoCellInventory getCellInv() {
-        Object o = this.getInternal();
-        if (o instanceof MEPassThrough) {
-            o = Ae2Reflect.getInternal((MEPassThrough<?>) o);
+        IMEInventory<?> inventory = this.getInternal();
+        if (inventory instanceof MEPassThrough<?>passThrough) {
+            inventory = passThrough.getInternal();
         }
-        return (ITakoCellInventory) (o instanceof ITakoCellInventory ? o : null);
-    }
-
-    @Override
-    public boolean isPreformatted() {
-        return !Ae2Reflect.getPartitionList(this)
-            .isEmpty();
+        return inventory instanceof ITakoCellInventory cell ? cell : null;
     }
 
     @Override
     public boolean isFuzzy() {
-        return Ae2Reflect.getPartitionList(this) instanceof FuzzyPriorityList;
+        IPartitionList<IAEItemStack> partition = this.getPartitionList();
+        return partition instanceof OreCellFuzzyPartitionList || partition instanceof FuzzyPriorityList<?>;
     }
 
     @Override

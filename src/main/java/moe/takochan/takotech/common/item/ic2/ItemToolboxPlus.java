@@ -7,33 +7,28 @@ import java.util.Optional;
 
 import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.client.settings.GameSettings;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.IIcon;
+import net.minecraft.world.World;
 
-import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
-import ic2.core.item.IHandHeldInventory;
+import gregtech.common.items.ItemGTToolbox;
 import moe.takochan.takotech.client.tabs.TakoTechTabs;
 import moe.takochan.takotech.common.data.ToolData;
+import moe.takochan.takotech.common.item.IBaseItem;
 import moe.takochan.takotech.constants.NameConstants;
 import moe.takochan.takotech.utils.CommonUtils;
 import moe.takochan.takotech.utils.I18nUtils;
 import moe.takochan.takotech.utils.ToolboxHelper;
 
-public class ItemToolboxPlus extends BaseItemToolbox implements IHandHeldInventory {
-
-    // 基础图标
-    @SideOnly(Side.CLIENT)
-    private IIcon baseIcon;
+public class ItemToolboxPlus extends ItemGTToolbox implements IBaseItem {
 
     public ItemToolboxPlus() {
-        super(NameConstants.ITEM_TOOLBOX_PLUS);
-        // 设置最大堆叠数为1
-        this.setMaxStackSize(1);
-        // 设置材质路径
-        this.setTextureName(CommonUtils.resource(NameConstants.ITEM_TOOLBOX_PLUS));
+        super("takotech." + NameConstants.ITEM_TOOLBOX_PLUS, "Tool Box Plus", "");
+        setTextureName(CommonUtils.resource(NameConstants.ITEM_TOOLBOX_PLUS));
     }
 
     // ==================== 静态方法代理到 ToolboxHelper ====================
@@ -94,6 +89,22 @@ public class ItemToolboxPlus extends BaseItemToolbox implements IHandHeldInvento
         return ToolboxHelper.isMetaGeneratedTool(itemStack);
     }
 
+    @Override
+    public void onUpdate(ItemStack toolbox, World world, Entity entity, int slot, boolean isInHand) {
+        if (!world.isRemote && ToolboxHelper.hasLegacyLayout(toolbox)) {
+            ToolboxHelper.migrateLegacyContents(toolbox, null);
+        }
+        super.onUpdate(toolbox, world, entity, slot, isInHand);
+    }
+
+    @Override
+    public ItemStack onItemRightClick(ItemStack toolbox, World world, EntityPlayer player) {
+        if (!world.isRemote) {
+            ToolboxHelper.migrateLegacyContents(toolbox, player);
+        }
+        return super.onItemRightClick(toolbox, world, player);
+    }
+
     /**
      * 添加物品信息
      *
@@ -106,10 +117,13 @@ public class ItemToolboxPlus extends BaseItemToolbox implements IHandHeldInvento
     @SideOnly(Side.CLIENT)
     public void addInformation(final ItemStack itemStack, final EntityPlayer player, final List<String> lines,
         final boolean displayMoreInfo) {
-        lines.add(
-            I18nUtils.tooltip(
-                NameConstants.ITEM_TOOLBOX_PLUS_DESC,
-                GameSettings.getKeyDisplayString(selectTool.getKeyCode())));
+        super.addInformation(itemStack, player, lines, displayMoreInfo);
+        if (selectTool != null) {
+            lines.add(
+                I18nUtils.tooltip(
+                    NameConstants.ITEM_TOOLBOX_PLUS_DESC,
+                    GameSettings.getKeyDisplayString(selectTool.getKeyCode())));
+        }
     }
 
     /**
@@ -120,8 +134,12 @@ public class ItemToolboxPlus extends BaseItemToolbox implements IHandHeldInvento
     @Override
     @SideOnly(Side.CLIENT)
     public void registerIcons(IIconRegister register) {
-        super.registerIcons(register);
-        this.baseIcon = register.registerIcon(this.getIconString());
+        mIcon = register.registerIcon(getIconString());
+    }
+
+    @Override
+    public String getName() {
+        return NameConstants.ITEM_TOOLBOX_PLUS;
     }
 
     /**
@@ -129,7 +147,6 @@ public class ItemToolboxPlus extends BaseItemToolbox implements IHandHeldInvento
      */
     @Override
     public void register() {
-        GameRegistry.registerItem(this, NameConstants.ITEM_TOOLBOX_PLUS);
         setCreativeTab(TakoTechTabs.getInstance());
     }
 
@@ -140,7 +157,7 @@ public class ItemToolboxPlus extends BaseItemToolbox implements IHandHeldInvento
      */
     @SideOnly(Side.CLIENT)
     public IIcon getBaseIcon() {
-        return baseIcon;
+        return getIconFromDamage(0);
     }
 
 }

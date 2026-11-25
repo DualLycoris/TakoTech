@@ -16,12 +16,6 @@
       "logoFile": "assets/takotech/logo.png",
       "screenshots": [],
       "parent": "",
-      "requiredMods": [],
-      "dependencies": [
-        "required-after:gtnhlib",
-        "after:NotEnoughItems"
-      ],
-      "dependants": [],
       "useDependencyInformation": false
     }
   ]

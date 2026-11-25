@@ -1,5 +1,7 @@
 package moe.takochan.takotech.common.item.ae;
 
+import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
+
 import java.text.NumberFormat;
 import java.util.Collection;
 import java.util.EnumMap;
@@ -28,12 +30,12 @@ import appeng.api.implementations.items.IItemGroup;
 import appeng.api.implementations.items.IStorageCell;
 import appeng.api.storage.IMEInventoryHandler;
 import appeng.api.storage.ISaveProvider;
-import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.core.features.AEFeature;
 import appeng.core.localization.GuiText;
 import appeng.items.contents.CellConfig;
 import appeng.items.contents.CellUpgrades;
+import appeng.tile.inventory.IAEStackInventory;
 import appeng.util.item.AEItemStack;
 import appeng.util.item.OreHelper;
 import appeng.util.item.OreReference;
@@ -146,7 +148,7 @@ public class ItemOreStorageCell extends BaseAECellItem implements IStorageCell, 
         final IMEInventoryHandler<?> inventory = AEApi.instance()
             .registries()
             .cell()
-            .getCellInventory(itemStack, null, StorageChannel.ITEMS);
+            .getCellInventory(itemStack, null, ITEM_STACK_TYPE);
 
         // 检查库存处理器是否是 ICellInventoryHandler 类型
         if (inventory instanceof ITakoCellInventoryHandler handler) {
@@ -188,11 +190,11 @@ public class ItemOreStorageCell extends BaseAECellItem implements IStorageCell, 
                         // 如果 Shift 键被按下，显示过滤器详细信息
                         if (GuiScreen.isShiftKeyDown()) {
                             lines.add(GuiText.Filter.getLocal() + ": ");
-                            for (int i = 0; i < cellInventory.getConfigInventory()
-                                .getSizeInventory(); ++i) {
-                                ItemStack s = cellInventory.getConfigInventory()
-                                    .getStackInSlot(i);
-                                if (s != null) lines.add(s.getDisplayName()); // 显示物品名称
+                            final IAEStackInventory config = cellInventory.getConfigAEInventory();
+                            for (int i = 0; i < config.getSizeInventory(); ++i) {
+                                if (config.getAEStackInSlot(i) instanceof IAEItemStack stack) {
+                                    lines.add(stack.getDisplayName());
+                                }
                             }
                         }
                     } else {
@@ -368,7 +370,7 @@ public class ItemOreStorageCell extends BaseAECellItem implements IStorageCell, 
      * @return 返回存储单元的配置槽，若没有则返回 null
      */
     @Override
-    public IInventory getConfigInventory(ItemStack is) {
+    public IAEStackInventory getConfigAEInventory(ItemStack is) {
         return new CellConfig(is);
     }
 
